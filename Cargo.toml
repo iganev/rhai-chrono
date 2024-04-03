@@ -1,0 +1,7 @@
+[package]
+name = "rhai-chrono"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rhai = { version = "^1.15" }
