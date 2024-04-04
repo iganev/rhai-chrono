@@ -17,6 +17,7 @@ name = "rhai_chrono"
 path = "src/lib.rs"
 
 [features]
+default = []
 sync = ["rhai/sync"]
 
 [dependencies]

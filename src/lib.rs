@@ -1,4 +1,4 @@
-use rhai::def_package;
+use rhai::{def_package};
 use rhai::plugin::*;
 
 pub(crate) mod datetime;
@@ -12,9 +12,54 @@ def_package! {
 
 #[cfg(test)]
 mod tests {
+    use rhai::Engine;
+    use rhai::packages::Package;
+    use crate::ChronoPackage;
+    use crate::datetime::datetime_module::DateTimeFixed;
+
     #[test]
     fn it_works() {
-        assert_eq!(1, 1);
+        let mut engine = Engine::new();
+
+        let package = ChronoPackage::new();
+        package.register_into_engine(&mut engine);
+
+        assert!(
+            engine.eval::<DateTimeFixed>(r#"datetime_now()"#).is_ok(),
+            "we should be getting Utc::now()"
+        );
+
+        assert!(
+            engine.eval::<DateTimeFixed>(r#"datetime_utc()"#).is_ok(),
+            "we should be getting Utc::now()"
+        );
+
+        assert!(
+            engine.eval::<DateTimeFixed>(r#"datetime_local()"#).is_ok(),
+            "we should be getting Local::now()"
+        );
+
+        assert!(
+            engine.eval::<String>(r#"let dt = datetime_utc(); dt.to_string()"#).is_ok(),
+            "we should be getting RFC3339 string"
+        );
+
+        assert!(
+            engine.eval::<String>(r#"let dt = datetime_local(); dt.to_string()"#).is_ok(),
+            "we should be getting RFC3339 string"
+        );
+
+        assert!(
+            engine.eval::<String>(r#"let dt = datetime_utc(); dt.to_rfc3339()"#).is_ok(),
+            "we should be getting RFC3339 string"
+        );
+
+        assert!(
+            engine.eval::<String>(r#"let dt = datetime_local(); dt.to_rfc3339()"#).is_ok(),
+            "we should be getting RFC3339 string"
+        );
+
+
     }
 
     #[test]
