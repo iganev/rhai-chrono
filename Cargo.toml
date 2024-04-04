@@ -2,6 +2,27 @@
 name = "rhai-chrono"
 version = "0.1.0"
 edition = "2021"
+authors = ["Ivan Ganev <iganev@cytec.bg>"]
+description = "Rhai package for using chrono DateTime"
+keywords = ["rhai", "chrono", "date", "datetime"]
+categories = ["template-engine", "web-programming", "value-formatting", "text-processing"]
+homepage = "https://github.com/iganev/rhai-chrono"
+repository = "https://github.com/iganev/rhai-chrono"
+documentation = "https://docs.rs/crate/rhai-chrono/"
+readme = "README.md"
+license = "BSD-2-Clause"
+
+[lib]
+name = "rhai_chrono"
+path = "src/lib.rs"
+
+[features]
+sync = ["rhai/sync"]
 
 [dependencies]
 rhai = { version = "^1.15" }
+chrono = { version = "^0.4", features = ["serde", "unstable-locales"] }
+chrono-tz = { version = "^0.8" }
+
+[badges]
+maintenance = { status = "actively-developed" }
