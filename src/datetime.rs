@@ -20,6 +20,7 @@ pub mod datetime_module {
     use chrono::FixedOffset;
     use chrono::Utc;
     use chrono::Locale;
+    use chrono::Datelike;
 
     use chrono_tz::Tz;
     use rhai::{EvalAltResult, Position, Shared, Locked};
@@ -41,8 +42,8 @@ pub mod datetime_module {
 
     /// Construct DateTime with UNIX timestamp
     #[rhai_fn(return_raw)]
-    pub fn datetime_unix(secs: i64) -> Result<DateTimeFixed, Box<EvalAltResult>> {
-        DateTime::from_timestamp(secs, 0)
+    pub fn datetime_unix(secs: rhai::INT) -> Result<DateTimeFixed, Box<EvalAltResult>> {
+        DateTime::from_timestamp(secs as i64, 0)
             .ok_or::<Box<EvalAltResult>>(
                 Box::<EvalAltResult>::from("Timestamp out of range".to_string())
             )
@@ -51,8 +52,8 @@ pub mod datetime_module {
 
     /// Construct DateTime with UNIX timestamp in milliseconds
     #[rhai_fn(return_raw)]
-    pub fn datetime_millis(millis: i64) -> Result<DateTimeFixed, Box<EvalAltResult>> {
-        DateTime::from_timestamp_millis(millis)
+    pub fn datetime_millis(millis: rhai::INT) -> Result<DateTimeFixed, Box<EvalAltResult>> {
+        DateTime::from_timestamp_millis(millis as i64)
             .ok_or::<Box<EvalAltResult>>(
                 Box::<EvalAltResult>::from("Timestamp out of range".to_string())
             )
@@ -61,8 +62,8 @@ pub mod datetime_module {
 
     /// Construct DateTime with UNIX timestamp in microseconds
     #[rhai_fn(return_raw)]
-    pub fn datetime_micros(micros: i64) -> Result<DateTimeFixed, Box<EvalAltResult>> {
-        DateTime::from_timestamp_micros(micros)
+    pub fn datetime_micros(micros: rhai::INT) -> Result<DateTimeFixed, Box<EvalAltResult>> {
+        DateTime::from_timestamp_micros(micros as i64)
             .ok_or::<Box<EvalAltResult>>(
                 Box::<EvalAltResult>::from("Timestamp out of range".to_string())
             )
@@ -71,9 +72,9 @@ pub mod datetime_module {
 
     /// Construct DateTime with UNIX timestamp in nanoseconds
     #[rhai_fn(return_raw)]
-    pub fn datetime_nanos(nanos: i64) -> Result<DateTimeFixed, Box<EvalAltResult>> {
+    pub fn datetime_nanos(nanos: rhai::INT) -> Result<DateTimeFixed, Box<EvalAltResult>> {
         Ok(Shared::new(Locked::new(
-            DateTime::from_timestamp_nanos(nanos).fixed_offset(),
+            DateTime::from_timestamp_nanos(nanos as i64).fixed_offset(),
         )))
     }
 
@@ -135,20 +136,20 @@ pub mod datetime_module {
 
     /// Output UNIX timestamp i64
     #[rhai_fn(global, name = "timestamp", pure)]
-    pub fn timestamp(dt: &mut DateTimeFixed) -> i64 {
-        borrow_mut(dt).timestamp()
+    pub fn timestamp(dt: &mut DateTimeFixed) -> rhai::INT {
+        borrow_mut(dt).timestamp() as rhai::INT
     }
 
     /// Output UNIX timestamp in milliseconds
     #[rhai_fn(global, name = "timestamp_millis", pure)]
-    pub fn timestamp_millis(dt: &mut DateTimeFixed) -> i64 {
-        borrow_mut(dt).timestamp_millis()
+    pub fn timestamp_millis(dt: &mut DateTimeFixed) -> rhai::INT {
+        borrow_mut(dt).timestamp_millis() as rhai::INT
     }
 
     /// Output UNIX timestamp in microseconds
     #[rhai_fn(global, name = "timestamp_micros", pure)]
-    pub fn timestamp_micros(dt: &mut DateTimeFixed) -> i64 {
-        borrow_mut(dt).timestamp_micros()
+    pub fn timestamp_micros(dt: &mut DateTimeFixed) -> rhai::INT {
+        borrow_mut(dt).timestamp_micros() as rhai::INT
     }
 
     /// Output UNIX timestamp in nanoseconds
@@ -162,45 +163,45 @@ pub mod datetime_module {
 
     /// Returns the number of milliseconds since the last second boundary.
     #[rhai_fn(global, name = "timestamp_subsec_millis", pure)]
-    pub fn timestamp_subsec_millis(dt: &mut DateTimeFixed) -> u32 {
-        borrow_mut(dt).timestamp_subsec_millis()
+    pub fn timestamp_subsec_millis(dt: &mut DateTimeFixed) -> rhai::INT {
+        borrow_mut(dt).timestamp_subsec_millis() as rhai::INT
     }
 
     /// Returns the number of microseconds since the last second boundary.
     #[rhai_fn(global, name = "timestamp_subsec_micros", pure)]
-    pub fn timestamp_subsec_micros(dt: &mut DateTimeFixed) -> u32 {
-        borrow_mut(dt).timestamp_subsec_micros()
+    pub fn timestamp_subsec_micros(dt: &mut DateTimeFixed) -> rhai::INT {
+        borrow_mut(dt).timestamp_subsec_micros() as rhai::INT
     }
 
     /// Returns the number of nanoseconds since the last second boundary.
     #[rhai_fn(global, name = "timestamp_subsec_nanos", pure)]
-    pub fn timestamp_subsec_nanos(dt: &mut DateTimeFixed) -> u32 {
-        borrow_mut(dt).timestamp_subsec_nanos()
+    pub fn timestamp_subsec_nanos(dt: &mut DateTimeFixed) -> rhai::INT {
+        borrow_mut(dt).timestamp_subsec_nanos() as rhai::INT
     }
 
     /// Retrieve the elapsed years from now to the given DateTime.
     #[rhai_fn(global, name = "years_since", pure)]
-    pub fn years_since_now(dt: &mut DateTimeFixed) -> i32 {
+    pub fn years_since_now(dt: &mut DateTimeFixed) -> rhai::INT {
         let this = *borrow_mut(dt);
         let base = Local::now().fixed_offset();
 
         if base < this {
-            this.years_since(base).map(|n| n as i32).unwrap_or_default()
+            this.years_since(base).map(|n| n as rhai::INT).unwrap_or_default()
         } else {
-            base.years_since(this).map(|n| (n as i32)*-1i32).unwrap_or_default()
+            base.years_since(this).map(|n| (n as rhai::INT)*-1).unwrap_or_default()
         }
     }
 
     /// Retrieve the elapsed years from given DateTime.
     #[rhai_fn(global, name = "years_since", pure)]
-    pub fn years_since(dt: &mut DateTimeFixed, base: DateTimeFixed) -> i32 {
+    pub fn years_since(dt: &mut DateTimeFixed, base: DateTimeFixed) -> rhai::INT {
         let this = *borrow_mut(dt);
         let base = *borrow_mut(&base);
 
         if base < this {
-            this.years_since(base).map(|n| n as i32).unwrap_or_default()
+            this.years_since(base).map(|n| n as rhai::INT).unwrap_or_default()
         } else {
-            base.years_since(this).map(|n| (n as i32)*-1i32).unwrap_or_default()
+            base.years_since(this).map(|n| (n as rhai::INT)*-1).unwrap_or_default()
         }
     }
 
@@ -264,6 +265,26 @@ pub mod datetime_module {
 
         Ok(())
 
+    }
+
+    /// Set the time segment with H:M:S formatted string; Defaults to midnight.
+    #[rhai_fn(global, name = "ordinal", name = "set_ordinal", name = "with_ordinal", pure, return_raw)]
+    pub fn ordinal(dt: &mut DateTimeFixed, day: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.with_ordinal(day as u32).ok_or(Box::<EvalAltResult>::from("Day out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Set the time segment with H:M:S formatted string; Defaults to midnight.
+    #[rhai_fn(global, name = "ordinal0", name = "set_ordinal0", name = "with_ordinal0", pure, return_raw)]
+    pub fn ordinal0(dt: &mut DateTimeFixed, day: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.with_ordinal0(day as u32).ok_or(Box::<EvalAltResult>::from("Day out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
     }
 
 }

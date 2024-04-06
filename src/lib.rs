@@ -12,10 +12,11 @@ def_package! {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{DateTime, Local, NaiveTime};
-    use chrono_tz::Tz;
+    use chrono::{DateTime, Datelike, Local, NaiveTime};
+
     use rhai::Engine;
     use rhai::packages::Package;
+    
     use crate::ChronoPackage;
     use crate::datetime::datetime_module::DateTimeFixed;
 
@@ -169,22 +170,22 @@ mod tests {
 
         // test timestamp_subsec_millis
         assert_eq!(
-            engine.eval::<u32>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timestamp_subsec_millis()"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
-            123u32,
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timestamp_subsec_millis()"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
+            123u32 as rhai::INT,
             "we should be getting UNIX milliseconds remainder"
         );
 
         // test timestamp_subsec_micros
         assert_eq!(
-            engine.eval::<u32>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timestamp_subsec_micros()"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
-            123456u32,
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timestamp_subsec_micros()"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
+            123456u32 as rhai::INT,
             "we should be getting UNIX microseconds remainder"
         );
 
         // test timestamp_subsec_nanos
         assert_eq!(
-            engine.eval::<u32>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timestamp_subsec_nanos()"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
-            123456789u32,
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timestamp_subsec_nanos()"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
+            123456789u32 as rhai::INT,
             "we should be getting UNIX nanoseconds remainder"
         );
 
@@ -192,20 +193,20 @@ mod tests {
         let years_since = Local::now().fixed_offset().years_since(DateTime::from_timestamp_nanos(timestamp_unix_nanos as i64).fixed_offset()).unwrap_or_default() as i32;
 
         assert_eq!(
-            engine.eval::<i32>(&format!(r#"let dt = datetime_now(); dt.years_since(datetime_rfc3339("{}"))"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
-            years_since,
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_now(); dt.years_since(datetime_rfc3339("{}"))"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
+            years_since as rhai::INT,
             "we should be getting number of years"
         );
 
         assert_eq!(
-            engine.eval::<i32>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.years_since()"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
-            years_since*-1i32,
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.years_since()"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
+            (years_since*-1i32) as rhai::INT,
             "we should be getting number of years"
         );
 
         assert_eq!(
-            engine.eval::<i32>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.years_since(datetime_now())"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
-            years_since*-1i32,
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.years_since(datetime_now())"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
+            (years_since*-1i32) as rhai::INT,
             "we should be getting number of years"
         );
 
@@ -248,6 +249,20 @@ mod tests {
         assert_eq!(
             engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.time("12:15"); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
             DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_time(NaiveTime::from_hms_opt(12, 15, 0).unwrap()).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+
+        // test ordinal
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.ordinal(5); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_ordinal(5).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+
+        // test ordinal0
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.ordinal0(5); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_ordinal0(5).unwrap().to_rfc2822(),
             "we should be getting RFC2822 string"
         );
 
