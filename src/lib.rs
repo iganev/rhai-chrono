@@ -1,4 +1,4 @@
-use rhai::{def_package};
+use rhai::def_package;
 use rhai::plugin::*;
 
 pub(crate) mod datetime;
@@ -12,7 +12,7 @@ def_package! {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{DateTime, Local, Utc};
+    use chrono::{DateTime, Local};
     use rhai::Engine;
     use rhai::packages::Package;
     use crate::ChronoPackage;
@@ -36,6 +36,9 @@ mod tests {
         let timestamp_rfc3339_millis = "1989-08-09T09:30:11.123+00:00";
         let timestamp_rfc3339_micros = "1989-08-09T09:30:11.123456+00:00";
         let timestamp_rfc3339_nanos = "1989-08-09T09:30:11.123456789+00:00";
+        let timestamp_localized = "mercredi, août  9";
+        let timestamp_localized_format = "%A, %B %e";
+        let timestamp_localized_locale = "fr_FR";
 
         // test init now
         assert!(
@@ -206,8 +209,18 @@ mod tests {
         );
 
         // test format
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc2822("{}"); dt.format("{}")"#, timestamp_rfc2822, timestamp_mysql_format)).unwrap_or_default(),
+            timestamp_mysql,
+            "we should be getting MySQL datetime string"
+        );
 
         // test format + locale
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc2822("{}"); dt.format("{}", "{}")"#, timestamp_rfc2822, timestamp_localized_format, timestamp_localized_locale)).unwrap_or_default(),
+            timestamp_localized,
+            "we should be getting pretty french words"
+        );
 
     }
 
