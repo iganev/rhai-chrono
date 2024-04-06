@@ -16,11 +16,12 @@ pub mod datetime_module {
 
     use std::str::FromStr;
 
-    use chrono::{DateTime, Local, NaiveDateTime};
+    use chrono::{DateTime, Local, NaiveDateTime, NaiveTime};
     use chrono::FixedOffset;
     use chrono::Utc;
     use chrono::Locale;
 
+    use chrono_tz::Tz;
     use rhai::{EvalAltResult, Position, Shared, Locked};
 
     /// Alias type to bridge rhai and chrono
@@ -214,6 +215,7 @@ pub mod datetime_module {
     /// Formats the combined date and time per the specified format string and locale.
     ///
     /// See the [format::strftime](https://docs.rs/chrono/latest/chrono/format/strftime/index.html) module on the supported escape sequences.
+    /// 
     /// See the [Locale](https://docs.rs/chrono/latest/chrono/enum.Locale.html) enum for list of valid locales
     #[rhai_fn(global, name = "format", pure, return_raw)]
     pub fn format_localized(dt: &mut DateTimeFixed, format: &str, locale: &str) -> Result<String, Box<EvalAltResult>> {
@@ -222,6 +224,46 @@ pub mod datetime_module {
         })?;
 
         Ok(format!("{}", borrow_mut(dt).format_localized(format, locale)))
+    }
+
+    #[rhai_fn(global, name = "timezone", name = "set_timezone", name = "with_timezone", pure, return_raw)]
+    pub fn timezone(dt: &mut DateTimeFixed, timezone: &str) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        let tz: FixedOffset = if timezone.to_lowercase() == "local" {
+            Local::now().fixed_offset().timezone()
+        } else if timezone.contains('0') {
+            if let Ok(tz) = FixedOffset::from_str(&timezone) {
+                tz
+            } else {
+                return Err(Box::<EvalAltResult>::from("Failed to parse timezone offset. Supported values are IANA timezones, local or valid fixed offset".to_string()));
+            }
+        } else {
+            if let Ok(tz) = timezone.parse::<Tz>() {
+                this.with_timezone(&tz).fixed_offset().timezone()
+            } else {
+                return Err(Box::<EvalAltResult>::from("Failed to parse IANA timezone. Supported values are IANA timezones, local or valid fixed offset".to_string()));
+            }
+        };
+
+        *this = this.with_timezone(&tz);
+
+        Ok(())
+    }
+
+    /// Set the time segment with H:M:S formatted string; Defaults to midnight.
+    #[rhai_fn(global, name = "time", name = "set_time", name = "with_time", pure, return_raw)]
+    pub fn time(dt: &mut DateTimeFixed, time: &str) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        let time_segments: Vec<u32> = time.split(":").take(3).map(|v| v.parse().unwrap_or_default()).collect();
+
+        let time = NaiveTime::from_hms_opt(time_segments.get(0).cloned().unwrap_or_default(), time_segments.get(1).cloned().unwrap_or_default(), time_segments.get(2).cloned().unwrap_or_default()).unwrap_or(NaiveTime::MIN);
+
+        *this = this.with_time(time).unwrap();
+
+        Ok(())
+
     }
 
 }

@@ -12,7 +12,8 @@ def_package! {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{DateTime, Local};
+    use chrono::{DateTime, Local, NaiveTime};
+    use chrono_tz::Tz;
     use rhai::Engine;
     use rhai::packages::Package;
     use crate::ChronoPackage;
@@ -220,6 +221,34 @@ mod tests {
             engine.eval::<String>(&format!(r#"let dt = datetime_rfc2822("{}"); dt.format("{}", "{}")"#, timestamp_rfc2822, timestamp_localized_format, timestamp_localized_locale)).unwrap_or_default(),
             timestamp_localized,
             "we should be getting pretty french words"
+        );
+
+        // test with timezone local
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timezone("local"); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_timezone(&Local::now().fixed_offset().timezone()).to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+
+        // test with IANA timezone
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timezone("America/Edmonton"); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_timezone(&chrono_tz::America::Edmonton).to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+
+        // test with offset for timezone
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timezone("-06:00"); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_timezone(&chrono_tz::America::Edmonton).to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+
+        // test with time
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.time("12:15"); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_time(NaiveTime::from_hms_opt(12, 15, 0).unwrap()).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
         );
 
     }
