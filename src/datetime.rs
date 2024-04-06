@@ -179,11 +179,27 @@ pub mod datetime_module {
 
     /// Retrieve the elapsed years from now to the given DateTime.
     #[rhai_fn(global, name = "years_since", pure)]
-    pub fn years_since(dt: &mut DateTimeFixed, base: DateTimeFixed) -> i32 {
-        if *base < **dt {
-            (borrow_mut(&base).years_since(*borrow_mut(dt)).unwrap_or_default() as i32)*-1i32
+    pub fn years_since_now(dt: &mut DateTimeFixed) -> i32 {
+        let this = *borrow_mut(dt);
+        let base = Local::now().fixed_offset();
+
+        if base < this {
+            this.years_since(base).map(|n| n as i32).unwrap_or_default()
         } else {
-            borrow_mut(dt).years_since(*borrow_mut(&base)).unwrap_or_default() as i32
+            base.years_since(this).map(|n| (n as i32)*-1i32).unwrap_or_default()
+        }
+    }
+
+    /// Retrieve the elapsed years from given DateTime.
+    #[rhai_fn(global, name = "years_since", pure)]
+    pub fn years_since(dt: &mut DateTimeFixed, base: DateTimeFixed) -> i32 {
+        let this = *borrow_mut(dt);
+        let base = *borrow_mut(&base);
+
+        if base < this {
+            this.years_since(base).map(|n| n as i32).unwrap_or_default()
+        } else {
+            base.years_since(this).map(|n| (n as i32)*-1i32).unwrap_or_default()
         }
     }
 
