@@ -14,7 +14,7 @@ def_package! {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{DateTime, Datelike, Local, NaiveTime};
+    use chrono::{DateTime, Datelike, Timelike, Local, NaiveTime};
 
     use rhai::Engine;
     use rhai::packages::Package;
@@ -269,23 +269,67 @@ mod tests {
         );
 
         // test year
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.year(1990); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_year(1990).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
 
         // test month
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.month(11); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_month(11).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
 
         // test month0
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.month0(10); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_month0(10).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
 
         // test day
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.day(11); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_day(11).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
 
         // test day0
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.day0(10); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_day0(10).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
 
         // test hour
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.hour(23); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_hour(23).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
 
         // test minute
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.minute(33); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_minute(33).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
 
         // test second
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.second(7); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_second(7).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
 
         // test nanosecond
-
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.nanosecond(123456789); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_nanosecond(123456789).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
 
 
     }
