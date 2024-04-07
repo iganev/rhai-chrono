@@ -5,7 +5,7 @@ use rhai::plugin::*;
 use rhai::{Locked, Shared};
 
 #[inline(always)]
-fn borrow_mut(datetime: &Shared<Locked<DateTime<FixedOffset>>>) -> impl DerefMut<Target = DateTime<FixedOffset>> + '_ {
+pub fn borrow_mut(datetime: &Shared<Locked<DateTime<FixedOffset>>>) -> impl DerefMut<Target = DateTime<FixedOffset>> + '_ {
     #[cfg(not(feature = "sync"))] return datetime.borrow_mut();
 
     #[cfg(feature = "sync")] return datetime.write().unwrap();
@@ -17,6 +17,8 @@ pub mod datetime_module {
     use std::str::FromStr;
 
     use chrono::DateTime;
+    use chrono::Days;
+    use chrono::Months;
     use chrono::NaiveDateTime;
     use chrono::NaiveTime;
     use chrono::Datelike;
@@ -29,6 +31,8 @@ pub mod datetime_module {
 
     use chrono_tz::Tz;
     use rhai::{EvalAltResult, Position, Shared, Locked};
+
+    use crate::timedelta::timedelta_module::Timedelta;
 
     /// Alias type to bridge rhai and chrono DateTime
     pub type DateTimeFixed = Shared<Locked<DateTime<FixedOffset>>>;
@@ -492,6 +496,77 @@ pub mod datetime_module {
         let this = borrow_mut(dt);
         
         this.nanosecond() as rhai::INT
+    }
+
+    /// Add number of days
+    #[rhai_fn(global, name = "add_days", name = "plus_days", pure, return_raw)]
+    pub fn add_days(dt: &mut DateTimeFixed, days: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.checked_add_days(Days::new(days as u64)).ok_or(Box::<EvalAltResult>::from("Days out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Subtract number of days
+    #[rhai_fn(global, name = "sub_days", name = "minus_days", pure, return_raw)]
+    pub fn sub_days(dt: &mut DateTimeFixed, days: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.checked_sub_days(Days::new(days as u64)).ok_or(Box::<EvalAltResult>::from("Days out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Add number of months
+    #[rhai_fn(global, name = "add_months", name = "plus_months", pure, return_raw)]
+    pub fn add_months(dt: &mut DateTimeFixed, months: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.checked_add_months(Months::new(months as u32)).ok_or(Box::<EvalAltResult>::from("Months out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Subtract number of months
+    #[rhai_fn(global, name = "sub_months", name = "minus_months", pure, return_raw)]
+    pub fn sub_months(dt: &mut DateTimeFixed, months: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.checked_sub_months(Months::new(months as u32)).ok_or(Box::<EvalAltResult>::from("Months out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Add Timedelta
+    #[rhai_fn(global, name = "add_timedelta", name = "plus_timedelta", pure, return_raw)]
+    pub fn add_timedelta(dt: &mut DateTimeFixed, td: Timedelta) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        let td = crate::timedelta::borrow_mut(&td);
+        
+        *this = this.checked_add_signed(*td).ok_or(Box::<EvalAltResult>::from("TimeDelta results in DateTime out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Subtract Timedelta
+    #[rhai_fn(global, name = "sub_timedelta", name = "minus_timedelta", pure, return_raw)]
+    pub fn sub_timedelta(dt: &mut DateTimeFixed, td: Timedelta) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        let td = crate::timedelta::borrow_mut(&td);
+        
+        *this = this.checked_sub_signed(*td).ok_or(Box::<EvalAltResult>::from("TimeDelta results in DateTime out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Diff of two DateTime instances, producing TimeDelta (DateTime::signed_duration_since)
+    #[rhai_fn(global, name = "diff", name = "cmp", name = "compare", name = "duration_since", name = "signed_duration_since", pure)]
+    pub fn diff(dt: &mut DateTimeFixed, rhs: DateTimeFixed) -> Timedelta {
+        let this = *borrow_mut(dt);
+        let rhs = *borrow_mut(&rhs);
+
+        Shared::new(Locked::new(this.signed_duration_since(&rhs)))
     }
 
 }

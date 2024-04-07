@@ -5,7 +5,7 @@ use rhai::plugin::*;
 use rhai::{Locked, Shared};
 
 #[inline(always)]
-fn borrow_mut(td: &Shared<Locked<TimeDelta>>) -> impl DerefMut<Target = TimeDelta> + '_ {
+pub fn borrow_mut(td: &Shared<Locked<TimeDelta>>) -> impl DerefMut<Target = TimeDelta> + '_ {
     #[cfg(not(feature = "sync"))] return td.borrow_mut();
 
     #[cfg(feature = "sync")] return td.write().unwrap();
