@@ -14,7 +14,7 @@ def_package! {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{DateTime, Datelike, Timelike, Local, NaiveTime};
+    use chrono::{DateTime, Datelike, Days, Local, Months, NaiveTime, Timelike};
 
     use rhai::Engine;
     use rhai::packages::Package;
@@ -33,6 +33,7 @@ mod tests {
         let timestamp_unix_millis: u64 = 618658211123;
         let timestamp_unix_micros: u64 = 618658211123456;
         let timestamp_unix_nanos: u64 = 618658211123456789;
+        let timestamp_unix_alt = 487772700;
         let timestamp_mysql = "1989-08-09 09:30:11";
         let timestamp_mysql_format = "%Y-%m-%d %H:%M:%S";
         let timestamp_rfc2822 = "Wed, 9 Aug 1989 09:30:11 +0000";
@@ -331,6 +332,47 @@ mod tests {
             "we should be getting RFC2822 string"
         );
 
+        // test add days
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.add_days(3); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().checked_add_days(Days::new(3)).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+
+        // test sub days
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.sub_days(3); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().checked_sub_days(Days::new(3)).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+
+        // test add months
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.add_months(2); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().checked_add_months(Months::new(2)).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+
+        // test sub months
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.sub_months(2); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
+            DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().checked_sub_months(Months::new(2)).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+
+        // test diff
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"
+                let dt = datetime_unix({});
+                let dt2 = datetime_unix({});
+                
+                let td = dt.diff(dt2);
+
+                td.seconds
+            "#, timestamp_unix, timestamp_unix_alt)).unwrap_or_default(),
+            (timestamp_unix - timestamp_unix_alt) as i64,
+            "we should be getting number of seconds difference"
+        );
 
     }
 
