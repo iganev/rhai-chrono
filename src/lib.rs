@@ -2,11 +2,13 @@ use rhai::def_package;
 use rhai::plugin::*;
 
 pub(crate) mod datetime;
+pub(crate) mod timedelta;
 
 def_package! {
     /// Package for chrono datetime usage.
     pub ChronoPackage(lib) {
        combine_with_exported_module!(lib, "rhai_chrono_datetime", datetime::datetime_module);
+       combine_with_exported_module!(lib, "rhai_chrono_timedelta", timedelta::timedelta_module);
     }
 }
 
@@ -265,6 +267,26 @@ mod tests {
             DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_ordinal0(5).unwrap().to_rfc2822(),
             "we should be getting RFC2822 string"
         );
+
+        // test year
+
+        // test month
+
+        // test month0
+
+        // test day
+
+        // test day0
+
+        // test hour
+
+        // test minute
+
+        // test second
+
+        // test nanosecond
+
+
 
     }
 

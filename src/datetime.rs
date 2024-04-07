@@ -16,16 +16,21 @@ pub mod datetime_module {
 
     use std::str::FromStr;
 
-    use chrono::{DateTime, Local, NaiveDateTime, NaiveTime};
+    use chrono::DateTime;
+    use chrono::NaiveDateTime;
+    use chrono::NaiveTime;
+    use chrono::Datelike;
+    use chrono::Timelike;
+    use chrono::Local;
     use chrono::FixedOffset;
     use chrono::Utc;
     use chrono::Locale;
-    use chrono::Datelike;
+
 
     use chrono_tz::Tz;
     use rhai::{EvalAltResult, Position, Shared, Locked};
 
-    /// Alias type to bridge rhai and chrono
+    /// Alias type to bridge rhai and chrono DateTime
     pub type DateTimeFixed = Shared<Locked<DateTime<FixedOffset>>>;
 
     /// Construct DateTime with current UTC time
@@ -227,8 +232,9 @@ pub mod datetime_module {
         Ok(format!("{}", borrow_mut(dt).format_localized(format, locale)))
     }
 
-    #[rhai_fn(global, name = "timezone", name = "set_timezone", name = "with_timezone", pure, return_raw)]
-    pub fn timezone(dt: &mut DateTimeFixed, timezone: &str) -> Result<(), Box<EvalAltResult>> {
+    /// Set timezone or offset
+    #[rhai_fn(global, set = "timezone", name = "timezone", name = "set_timezone", name = "with_timezone", pure, return_raw)]
+    pub fn set_timezone(dt: &mut DateTimeFixed, timezone: &str) -> Result<(), Box<EvalAltResult>> {
         let mut this = borrow_mut(dt);
         
         let tz: FixedOffset = if timezone.to_lowercase() == "local" {
@@ -252,9 +258,25 @@ pub mod datetime_module {
         Ok(())
     }
 
+    /// Get timezone 
+    #[rhai_fn(global, get = "timezone", name = "timezone", name = "get_timezone", pure)]
+    pub fn get_timezone(dt: &mut DateTimeFixed) -> String {
+        let this = borrow_mut(dt);
+        
+        this.timezone().to_string()
+    }
+
+    /// Get offset 
+    #[rhai_fn(global, get = "offset", name = "offset", name = "get_offset", pure)]
+    pub fn get_offset(dt: &mut DateTimeFixed) -> String {
+        let this = borrow_mut(dt);
+        
+        this.offset().to_string()
+    }
+
     /// Set the time segment with H:M:S formatted string; Defaults to midnight.
-    #[rhai_fn(global, name = "time", name = "set_time", name = "with_time", pure, return_raw)]
-    pub fn time(dt: &mut DateTimeFixed, time: &str) -> Result<(), Box<EvalAltResult>> {
+    #[rhai_fn(global, set = "time", name = "time", name = "set_time", name = "with_time", pure, return_raw)]
+    pub fn set_time(dt: &mut DateTimeFixed, time: &str) -> Result<(), Box<EvalAltResult>> {
         let mut this = borrow_mut(dt);
         
         let time_segments: Vec<u32> = time.split(":").take(3).map(|v| v.parse().unwrap_or_default()).collect();
@@ -264,12 +286,19 @@ pub mod datetime_module {
         *this = this.with_time(time).unwrap();
 
         Ok(())
-
     }
 
-    /// Set the time segment with H:M:S formatted string; Defaults to midnight.
-    #[rhai_fn(global, name = "ordinal", name = "set_ordinal", name = "with_ordinal", pure, return_raw)]
-    pub fn ordinal(dt: &mut DateTimeFixed, day: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+    /// Get time 
+    #[rhai_fn(global, get = "time", name = "time", name = "get_time", pure)]
+    pub fn get_time(dt: &mut DateTimeFixed) -> String {
+        let this = borrow_mut(dt);
+        
+        this.time().to_string()
+    }
+
+    /// Set the ordinal day
+    #[rhai_fn(global, set = "ordinal", name = "ordinal", name = "set_ordinal", name = "with_ordinal", pure, return_raw)]
+    pub fn set_ordinal(dt: &mut DateTimeFixed, day: rhai::INT) -> Result<(), Box<EvalAltResult>> {
         let mut this = borrow_mut(dt);
         
         *this = this.with_ordinal(day as u32).ok_or(Box::<EvalAltResult>::from("Day out of range or doesn't make any sense.".to_string()))?;
@@ -277,14 +306,192 @@ pub mod datetime_module {
         Ok(())
     }
 
-    /// Set the time segment with H:M:S formatted string; Defaults to midnight.
-    #[rhai_fn(global, name = "ordinal0", name = "set_ordinal0", name = "with_ordinal0", pure, return_raw)]
-    pub fn ordinal0(dt: &mut DateTimeFixed, day: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+    /// Get ordinal 
+    #[rhai_fn(global, get = "ordinal", name = "ordinal", name = "get_ordinal", pure)]
+    pub fn get_ordinal(dt: &mut DateTimeFixed) -> rhai::INT {
+        let this = borrow_mut(dt);
+        
+        this.ordinal() as rhai::INT
+    }
+
+    /// Set the ordinal0 day
+    #[rhai_fn(global, set = "ordinal0", name = "ordinal0", name = "set_ordinal0", name = "with_ordinal0", pure, return_raw)]
+    pub fn set_ordinal0(dt: &mut DateTimeFixed, day: rhai::INT) -> Result<(), Box<EvalAltResult>> {
         let mut this = borrow_mut(dt);
         
         *this = this.with_ordinal0(day as u32).ok_or(Box::<EvalAltResult>::from("Day out of range or doesn't make any sense.".to_string()))?;
 
         Ok(())
+    }
+
+    /// Get ordinal0 
+    #[rhai_fn(global, get = "ordinal0", name = "ordinal0", name = "get_ordinal0", pure)]
+    pub fn get_ordinal0(dt: &mut DateTimeFixed) -> rhai::INT {
+        let this = borrow_mut(dt);
+        
+        this.ordinal0() as rhai::INT
+    }
+
+    /// Set the year
+    #[rhai_fn(global, set = "year", name = "year", name = "set_year", name = "with_year", pure, return_raw)]
+    pub fn set_year(dt: &mut DateTimeFixed, year: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.with_year(year as i32).ok_or(Box::<EvalAltResult>::from("Year out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Get the year 
+    #[rhai_fn(global, get = "year", name = "year", name = "get_year", pure)]
+    pub fn get_year(dt: &mut DateTimeFixed) -> rhai::INT {
+        let this = borrow_mut(dt);
+        
+        this.year() as rhai::INT
+    }
+
+    /// Set the month
+    #[rhai_fn(global, set = "month", name = "month", name = "set_month", name = "with_month", pure, return_raw)]
+    pub fn set_month(dt: &mut DateTimeFixed, month: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.with_month(month as u32).ok_or(Box::<EvalAltResult>::from("Month out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Get the month 
+    #[rhai_fn(global, get = "month", name = "month", name = "get_month", pure)]
+    pub fn get_month(dt: &mut DateTimeFixed) -> rhai::INT {
+        let this = borrow_mut(dt);
+        
+        this.month() as rhai::INT
+    }
+
+    /// Set the month0
+    #[rhai_fn(global, set = "month0", name = "month0", name = "set_month0", name = "with_month0", pure, return_raw)]
+    pub fn set_month0(dt: &mut DateTimeFixed, month0: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.with_month0(month0 as u32).ok_or(Box::<EvalAltResult>::from("Month out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Get the month0
+    #[rhai_fn(global, get = "month0", name = "month0", name = "get_month0", pure)]
+    pub fn get_month0(dt: &mut DateTimeFixed) -> rhai::INT {
+        let this = borrow_mut(dt);
+        
+        this.month0() as rhai::INT
+    }
+
+    /// Set the day
+    #[rhai_fn(global, set = "day", name = "day", name = "set_day", name = "with_day", pure, return_raw)]
+    pub fn set_day(dt: &mut DateTimeFixed, day: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.with_day(day as u32).ok_or(Box::<EvalAltResult>::from("Day out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Get the day 
+    #[rhai_fn(global, get = "day", name = "day", name = "get_day", pure)]
+    pub fn get_day(dt: &mut DateTimeFixed) -> rhai::INT {
+        let this = borrow_mut(dt);
+        
+        this.day() as rhai::INT
+    }
+
+    /// Set the day0
+    #[rhai_fn(global, set = "day0", name = "day0", name = "set_day0", name = "with_day0", pure, return_raw)]
+    pub fn set_day0(dt: &mut DateTimeFixed, day0: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.with_day0(day0 as u32).ok_or(Box::<EvalAltResult>::from("Day out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Get the day0
+    #[rhai_fn(global, get = "day0", name = "day0", name = "get_day0", pure)]
+    pub fn get_day0(dt: &mut DateTimeFixed) -> rhai::INT {
+        let this = borrow_mut(dt);
+        
+        this.day0() as rhai::INT
+    }
+
+    /// Set the hour
+    #[rhai_fn(global, set = "hour", name = "hour", name = "set_hour", name = "with_hour", pure, return_raw)]
+    pub fn set_hour(dt: &mut DateTimeFixed, hour: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.with_hour(hour as u32).ok_or(Box::<EvalAltResult>::from("Hour out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Get the hour 
+    #[rhai_fn(global, get = "hour", name = "hour", name = "get_hour", pure)]
+    pub fn get_hour(dt: &mut DateTimeFixed) -> rhai::INT {
+        let this = borrow_mut(dt);
+        
+        this.hour() as rhai::INT
+    }
+
+    /// Set the minute
+    #[rhai_fn(global, set = "minute", name = "minute", name = "set_minute", name = "with_minute", pure, return_raw)]
+    pub fn set_minute(dt: &mut DateTimeFixed, minute: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.with_minute(minute as u32).ok_or(Box::<EvalAltResult>::from("Minute out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Get the minute 
+    #[rhai_fn(global, get = "minute", name = "minute", name = "get_minute", pure)]
+    pub fn get_minute(dt: &mut DateTimeFixed) -> rhai::INT {
+        let this = borrow_mut(dt);
+        
+        this.minute() as rhai::INT
+    }
+
+    /// Set the second
+    #[rhai_fn(global, set = "second", name = "second", name = "set_second", name = "with_second", pure, return_raw)]
+    pub fn set_second(dt: &mut DateTimeFixed, second: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.with_second(second as u32).ok_or(Box::<EvalAltResult>::from("Seconds out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Get the second 
+    #[rhai_fn(global, get = "second", name = "second", name = "get_second", pure)]
+    pub fn get_second(dt: &mut DateTimeFixed) -> rhai::INT {
+        let this = borrow_mut(dt);
+        
+        this.second() as rhai::INT
+    }
+
+    /// Set the nanosecond
+    #[rhai_fn(global, set = "nanosecond", name = "nanosecond", name = "set_nanosecond", name = "with_nanosecond", pure, return_raw)]
+    pub fn set_nanosecond(dt: &mut DateTimeFixed, nanosecond: rhai::INT) -> Result<(), Box<EvalAltResult>> {
+        let mut this = borrow_mut(dt);
+        
+        *this = this.with_nanosecond(nanosecond as u32).ok_or(Box::<EvalAltResult>::from("Nanoseconds out of range or doesn't make any sense.".to_string()))?;
+
+        Ok(())
+    }
+
+    /// Get the nanosecond 
+    #[rhai_fn(global, get = "nanosecond", name = "nanosecond", name = "get_nanosecond", pure)]
+    pub fn get_nanosecond(dt: &mut DateTimeFixed) -> rhai::INT {
+        let this = borrow_mut(dt);
+        
+        this.nanosecond() as rhai::INT
     }
 
 }
