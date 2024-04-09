@@ -51,7 +51,7 @@ pub mod datetime_module {
     /// Construct DateTime with UNIX timestamp
     #[rhai_fn(return_raw)]
     pub fn datetime_unix(secs: rhai::INT) -> Result<DateTimeFixed, Box<EvalAltResult>> {
-        DateTime::from_timestamp(secs as i64, 0)
+        DateTime::from_timestamp(secs, 0)
             .ok_or::<Box<EvalAltResult>>(
                 Box::<EvalAltResult>::from("Timestamp out of range".to_string())
             )
@@ -61,7 +61,7 @@ pub mod datetime_module {
     /// Construct DateTime with UNIX timestamp in milliseconds
     #[rhai_fn(return_raw)]
     pub fn datetime_millis(millis: rhai::INT) -> Result<DateTimeFixed, Box<EvalAltResult>> {
-        DateTime::from_timestamp_millis(millis as i64)
+        DateTime::from_timestamp_millis(millis)
             .ok_or::<Box<EvalAltResult>>(
                 Box::<EvalAltResult>::from("Timestamp out of range".to_string())
             )
@@ -71,7 +71,7 @@ pub mod datetime_module {
     /// Construct DateTime with UNIX timestamp in microseconds
     #[rhai_fn(return_raw)]
     pub fn datetime_micros(micros: rhai::INT) -> Result<DateTimeFixed, Box<EvalAltResult>> {
-        DateTime::from_timestamp_micros(micros as i64)
+        DateTime::from_timestamp_micros(micros)
             .ok_or::<Box<EvalAltResult>>(
                 Box::<EvalAltResult>::from("Timestamp out of range".to_string())
             )
@@ -82,7 +82,7 @@ pub mod datetime_module {
     #[rhai_fn(return_raw)]
     pub fn datetime_nanos(nanos: rhai::INT) -> Result<DateTimeFixed, Box<EvalAltResult>> {
         Ok(Shared::new(Locked::new(
-            DateTime::from_timestamp_nanos(nanos as i64).fixed_offset(),
+            DateTime::from_timestamp_nanos(nanos).fixed_offset(),
         )))
     }
 
@@ -166,7 +166,6 @@ pub mod datetime_module {
         borrow_mut(dt).timestamp_nanos_opt().ok_or::<Box<EvalAltResult>>(
             Box::<EvalAltResult>::from("Timestamp out of range (range is ~584 years)".to_string())
         )
-        .map(|nanos| nanos.into())
     }
 
     /// Returns the number of milliseconds since the last second boundary.
@@ -196,7 +195,7 @@ pub mod datetime_module {
         if base < this {
             this.years_since(base).map(|n| n as rhai::INT).unwrap_or_default()
         } else {
-            base.years_since(this).map(|n| (n as rhai::INT)*-1).unwrap_or_default()
+            base.years_since(this).map(|n| -(n as rhai::INT)).unwrap_or_default()
         }
     }
 
@@ -209,7 +208,7 @@ pub mod datetime_module {
         if base < this {
             this.years_since(base).map(|n| n as rhai::INT).unwrap_or_default()
         } else {
-            base.years_since(this).map(|n| (n as rhai::INT)*-1).unwrap_or_default()
+            base.years_since(this).map(|n| -(n as rhai::INT)).unwrap_or_default()
         }
     }
 
@@ -243,17 +242,15 @@ pub mod datetime_module {
         let tz: FixedOffset = if timezone.to_lowercase() == "local" {
             Local::now().fixed_offset().timezone()
         } else if timezone.contains('0') {
-            if let Ok(tz) = FixedOffset::from_str(&timezone) {
+            if let Ok(tz) = FixedOffset::from_str(timezone) {
                 tz
             } else {
                 return Err(Box::<EvalAltResult>::from("Failed to parse timezone offset. Supported values are IANA timezones, local or valid fixed offset".to_string()));
             }
+        } else if let Ok(tz) = timezone.parse::<Tz>() {
+            this.with_timezone(&tz).fixed_offset().timezone()
         } else {
-            if let Ok(tz) = timezone.parse::<Tz>() {
-                this.with_timezone(&tz).fixed_offset().timezone()
-            } else {
-                return Err(Box::<EvalAltResult>::from("Failed to parse IANA timezone. Supported values are IANA timezones, local or valid fixed offset".to_string()));
-            }
+            return Err(Box::<EvalAltResult>::from("Failed to parse IANA timezone. Supported values are IANA timezones, local or valid fixed offset".to_string()));
         };
 
         *this = this.with_timezone(&tz);
@@ -282,9 +279,9 @@ pub mod datetime_module {
     pub fn set_time(dt: &mut DateTimeFixed, time: &str) -> Result<(), Box<EvalAltResult>> {
         let mut this = borrow_mut(dt);
         
-        let time_segments: Vec<u32> = time.split(":").take(3).map(|v| v.parse().unwrap_or_default()).collect();
+        let time_segments: Vec<u32> = time.split(':').take(3).map(|v| v.parse().unwrap_or_default()).collect();
 
-        let time = NaiveTime::from_hms_opt(time_segments.get(0).cloned().unwrap_or_default(), time_segments.get(1).cloned().unwrap_or_default(), time_segments.get(2).cloned().unwrap_or_default()).unwrap_or(NaiveTime::MIN);
+        let time = NaiveTime::from_hms_opt(time_segments.first().cloned().unwrap_or_default(), time_segments.get(1).cloned().unwrap_or_default(), time_segments.get(2).cloned().unwrap_or_default()).unwrap_or(NaiveTime::MIN);
 
         *this = this.with_time(time).unwrap();
 
@@ -565,7 +562,7 @@ pub mod datetime_module {
         let this = *borrow_mut(dt);
         let rhs = *borrow_mut(&rhs);
 
-        Shared::new(Locked::new(this.signed_duration_since(&rhs)))
+        Shared::new(Locked::new(this.signed_duration_since(rhs)))
     }
 
 }

@@ -42,55 +42,55 @@ pub mod timedelta_module {
     /// Construct TimeDelta with number of seconds
     #[rhai_fn(return_raw, name = "timedelta_seconds")]
     pub fn timedelta_seconds(seconds: rhai::INT) -> Result<Timedelta, Box<EvalAltResult>> {
-        Ok(Shared::new(Locked::new(TimeDelta::try_seconds(seconds as i64).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
+        Ok(Shared::new(Locked::new(TimeDelta::try_seconds(seconds).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
     }
 
     /// Construct TimeDelta with number of seconds
     #[rhai_fn(return_raw, name = "timedelta_seconds")]
     pub fn timedelta_seconds_and_nanos(seconds: rhai::INT, nanos: rhai::INT) -> Result<Timedelta, Box<EvalAltResult>> {
-        Ok(Shared::new(Locked::new(TimeDelta::new(seconds as i64, nanos as u32).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
+        Ok(Shared::new(Locked::new(TimeDelta::new(seconds, nanos as u32).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
     }
 
     /// Construct TimeDelta with number of days
     #[rhai_fn(return_raw, name = "timedelta_days")]
     pub fn timedelta_days(days: rhai::INT) -> Result<Timedelta, Box<EvalAltResult>> {
-        Ok(Shared::new(Locked::new(TimeDelta::try_days(days as i64).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
+        Ok(Shared::new(Locked::new(TimeDelta::try_days(days).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
     }
 
     /// Construct TimeDelta with number of weeks
     #[rhai_fn(return_raw, name = "timedelta_weeks")]
     pub fn timedelta_weeks(weeks: rhai::INT) -> Result<Timedelta, Box<EvalAltResult>> {
-        Ok(Shared::new(Locked::new(TimeDelta::try_weeks(weeks as i64).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
+        Ok(Shared::new(Locked::new(TimeDelta::try_weeks(weeks).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
     }
 
     /// Construct TimeDelta with number of hours
     #[rhai_fn(return_raw, name = "timedelta_hours")]
     pub fn timedelta_hours(hours: rhai::INT) -> Result<Timedelta, Box<EvalAltResult>> {
-        Ok(Shared::new(Locked::new(TimeDelta::try_hours(hours as i64).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
+        Ok(Shared::new(Locked::new(TimeDelta::try_hours(hours).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
     }
 
     /// Construct TimeDelta with number of minutes
     #[rhai_fn(return_raw, name = "timedelta_minutes")]
     pub fn timedelta_minutes(minutes: rhai::INT) -> Result<Timedelta, Box<EvalAltResult>> {
-        Ok(Shared::new(Locked::new(TimeDelta::try_minutes(minutes as i64).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
+        Ok(Shared::new(Locked::new(TimeDelta::try_minutes(minutes).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
     }
 
     /// Construct TimeDelta with number of milliseconds
     #[rhai_fn(return_raw, name = "timedelta_millis", name = "timedelta_milliseconds")]
     pub fn timedelta_millis(millis: rhai::INT) -> Result<Timedelta, Box<EvalAltResult>> {
-        Ok(Shared::new(Locked::new(TimeDelta::try_milliseconds(millis as i64).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
+        Ok(Shared::new(Locked::new(TimeDelta::try_milliseconds(millis).ok_or(Box::<EvalAltResult>::from("Delta out of range".to_string()))?)))
     }
 
     /// Construct TimeDelta with number of microseconds
     #[rhai_fn(name = "timedelta_micros", name = "timedelta_microseconds")]
     pub fn timedelta_micros(micros: rhai::INT) -> Timedelta {
-        Shared::new(Locked::new(TimeDelta::microseconds(micros as i64)))
+        Shared::new(Locked::new(TimeDelta::microseconds(micros)))
     }
 
     /// Construct TimeDelta with number of microseconds
     #[rhai_fn(name = "timedelta_nanos", name = "timedelta_nanoseconds")]
     pub fn timedelta_nanos(micros: rhai::INT) -> Timedelta {
-        Shared::new(Locked::new(TimeDelta::nanoseconds(micros as i64)))
+        Shared::new(Locked::new(TimeDelta::nanoseconds(micros)))
     }
 
     /// Check if is zero
