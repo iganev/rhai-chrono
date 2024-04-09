@@ -27,9 +27,8 @@ pub mod datetime_module {
     use chrono::FixedOffset;
     use chrono::Utc;
     use chrono::Locale;
-
-
     use chrono_tz::Tz;
+
     use rhai::{EvalAltResult, Position, Shared, Locked};
 
     use crate::timedelta::timedelta_module::Timedelta;

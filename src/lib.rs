@@ -14,8 +14,9 @@ def_package! {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{DateTime, Datelike, Days, Local, Months, NaiveTime, Timelike};
+    use chrono::{DateTime, Datelike, Days, Local, Months, NaiveTime, Timelike, Utc};
 
+    use chrono_tz::Tz;
     use rhai::Engine;
     use rhai::packages::Package;
     
@@ -208,6 +209,12 @@ mod tests {
         );
 
         assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_parse("2111-03-05 11:25:00", "{}"); dt.years_since()"#, timestamp_mysql_format)).unwrap_or_default() > 10,
+            true,
+            "we should be getting number of years"
+        );
+
+        assert_eq!(
             engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.years_since(datetime_now())"#, timestamp_rfc3339_nanos)).unwrap_or_default(),
             (years_since*-1i32) as rhai::INT,
             "we should be getting number of years"
@@ -234,11 +241,25 @@ mod tests {
             "we should be getting RFC2822 string"
         );
 
+        // test with timezone local
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timezone("local"); dt.timezone"#, timestamp_rfc3339)).unwrap_or_default(),
+            Local::now().fixed_offset().timezone().to_string(),
+            "we should be getting offset string"
+        );
+
         // test with IANA timezone
         assert_eq!(
             engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timezone("America/Edmonton"); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
             DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_timezone(&chrono_tz::America::Edmonton).to_rfc2822(),
             "we should be getting RFC2822 string"
+        );
+
+        // test with IANA timezone
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timezone("America/Edmonton"); dt.timezone"#, timestamp_rfc3339)).unwrap_or_default(),
+            Utc::now().with_timezone(&Tz::America__Edmonton).fixed_offset().offset().to_string(),
+            "we should be getting offset string"
         );
 
         // test with offset for timezone
@@ -248,10 +269,31 @@ mod tests {
             "we should be getting RFC2822 string"
         );
 
+        // test with offset for timezone
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timezone("-06:00"); dt.timezone"#, timestamp_rfc3339)).unwrap_or_default(),
+            "-06:00".to_string(),
+            "we should be getting offset string"
+        );
+
+        // test with offset for timezone
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.timezone("-06:00"); dt.offset"#, timestamp_rfc3339)).unwrap_or_default(),
+            "-06:00".to_string(),
+            "we should be getting offset string"
+        );
+
         // test with time
         assert_eq!(
             engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.time("12:15"); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
             DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_time(NaiveTime::from_hms_opt(12, 15, 0).unwrap()).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+
+        // test with time
+        assert_eq!(
+            engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.time("12:15"); dt.time"#, timestamp_rfc3339)).unwrap_or_default(),
+            "12:15:00".to_string(),
             "we should be getting RFC2822 string"
         );
 
@@ -262,11 +304,25 @@ mod tests {
             "we should be getting RFC2822 string"
         );
 
+        // test ordinal
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.ordinal"#, timestamp_rfc3339)).unwrap_or_default(),
+            221 as rhai::INT,
+            "we should be getting 5"
+        );
+
         // test ordinal0
         assert_eq!(
             engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.ordinal0(5); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
             DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_ordinal0(5).unwrap().to_rfc2822(),
             "we should be getting RFC2822 string"
+        );
+
+        // test ordinal0
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.ordinal0(5); dt.ordinal0"#, timestamp_rfc3339)).unwrap_or_default(),
+            5 as rhai::INT,
+            "we should be getting 5"
         );
 
         // test year
@@ -276,6 +332,13 @@ mod tests {
             "we should be getting RFC2822 string"
         );
 
+        // test year
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.year"#, timestamp_rfc3339)).unwrap_or_default(),
+            1989 as rhai::INT,
+            "we should be getting 1989"
+        );
+
         // test month
         assert_eq!(
             engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.month(11); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
@@ -283,10 +346,24 @@ mod tests {
             "we should be getting RFC2822 string"
         );
 
+        // test month
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.month"#, timestamp_rfc3339)).unwrap_or_default(),
+            8 as rhai::INT,
+            "we should be getting 8"
+        );
+
         // test month0
         assert_eq!(
             engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.month0(10); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
             DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_month0(10).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+
+        // test month0
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.month0(10); dt.month0"#, timestamp_rfc3339)).unwrap_or_default(),
+            10 as rhai::INT,
             "we should be getting RFC2822 string"
         );
 
@@ -297,10 +374,23 @@ mod tests {
             "we should be getting RFC2822 string"
         );
 
+        // test day
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.day"#, timestamp_rfc3339)).unwrap_or_default(),
+            9 as rhai::INT,
+            "we should be getting 9"
+        );
+
         // test day0
         assert_eq!(
             engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.day0(10); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
             DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_day0(10).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+        // test day0
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.day0(10); dt.day0"#, timestamp_rfc3339)).unwrap_or_default(),
+            10 as rhai::INT,
             "we should be getting RFC2822 string"
         );
 
@@ -311,11 +401,24 @@ mod tests {
             "we should be getting RFC2822 string"
         );
 
+        // test hour
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.hour"#, timestamp_rfc3339)).unwrap_or_default(),
+            9 as rhai::INT,
+            "we should be getting 9"
+        );
+
         // test minute
         assert_eq!(
             engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.minute(33); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
             DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_minute(33).unwrap().to_rfc2822(),
             "we should be getting RFC2822 string"
+        );
+
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.minute"#, timestamp_rfc3339)).unwrap_or_default(),
+            30 as rhai::INT,
+            "we should be getting 30"
         );
 
         // test second
@@ -325,10 +428,22 @@ mod tests {
             "we should be getting RFC2822 string"
         );
 
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.second(7); dt.second"#, timestamp_rfc3339)).unwrap_or_default(),
+            7 as rhai::INT,
+            "we should be getting 7"
+        );
+
         // test nanosecond
         assert_eq!(
             engine.eval::<String>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.nanosecond(123456789); dt.to_rfc2822()"#, timestamp_rfc3339)).unwrap_or_default(),
             DateTime::parse_from_rfc2822(timestamp_rfc2822).unwrap().with_nanosecond(123456789).unwrap().to_rfc2822(),
+            "we should be getting RFC2822 string"
+        );
+
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"let dt = datetime_rfc3339("{}"); dt.nanosecond(123456789); dt.nanosecond"#, timestamp_rfc3339)).unwrap_or_default(),
+            123456789 as rhai::INT,
             "we should be getting RFC2822 string"
         );
 
@@ -373,6 +488,8 @@ mod tests {
             (timestamp_unix - timestamp_unix_alt) as i64,
             "we should be getting number of seconds difference"
         );
+
+        // TODO test Timedelta
 
     }
 
