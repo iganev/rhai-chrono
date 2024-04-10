@@ -14,7 +14,7 @@ def_package! {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{DateTime, Datelike, Days, Local, Months, NaiveTime, Timelike, Utc};
+    use chrono::{DateTime, Datelike, Days, Local, Months, NaiveTime, TimeDelta, Timelike, Utc};
 
     use chrono_tz::Tz;
     use rhai::Engine;
@@ -22,6 +22,7 @@ mod tests {
     
     use crate::ChronoPackage;
     use crate::datetime::datetime_module::DateTimeFixed;
+    use crate::timedelta::timedelta_module::Timedelta;
 
     #[test]
     fn it_works() {
@@ -489,7 +490,207 @@ mod tests {
             "we should be getting number of seconds difference"
         );
 
-        // TODO test Timedelta
+        // test add_timedelta
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"
+                let dt = datetime_unix({});
+                let td = timedelta_days(2);
+
+                dt.add_timedelta(td);
+
+                dt.timestamp()
+            "#, timestamp_unix)).unwrap_or_default(),
+            (timestamp_unix + TimeDelta::try_days(2).unwrap().num_seconds() as u64) as i64,
+            "we should be getting number of seconds difference"
+        );
+
+        // test sub_timedelta
+        assert_eq!(
+            engine.eval::<rhai::INT>(&format!(r#"
+                let dt = datetime_unix({});
+                let td = timedelta_days(2);
+
+                dt.sub_timedelta(td);
+
+                dt.timestamp()
+            "#, timestamp_unix)).unwrap_or_default(),
+            (timestamp_unix - TimeDelta::try_days(2).unwrap().num_seconds() as u64) as i64,
+            "we should be getting number of seconds difference"
+        );
+
+        // test init zero
+        assert!(
+            engine.eval::<Timedelta>(r#"timedelta_zero()"#).is_ok(),
+            "we should be getting zero timedelta"
+        );
+
+        // test init zero
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_zero(); td.seconds"#).unwrap_or_default(),
+            0 as rhai::INT,
+            "we should be getting zero timedelta"
+        );
+
+        // test init zero
+        assert_eq!(
+            engine.eval::<bool>(r#"let td = timedelta_zero(); td.is_zero()"#).unwrap_or_default(),
+            true,
+            "we should be getting zero timedelta"
+        );
+
+        // test init min
+        assert_eq!(
+            engine.eval::<bool>(r#"let td = timedelta_min(); td.is_zero()"#).unwrap_or_default(),
+            false,
+            "we should be getting min timedelta"
+        );
+
+        // test init max
+        assert_eq!(
+            engine.eval::<bool>(r#"let td = timedelta_max(); td.is_zero()"#).unwrap_or_default(),
+            false,
+            "we should be getting max timedelta"
+        );
+
+        // test init seconds
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_seconds(7); td.seconds"#).unwrap_or_default(),
+            7 as rhai::INT,
+            "we should be getting 7"
+        );
+
+        // test init seconds and nanos
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_seconds(7, 123456789); td.seconds"#).unwrap_or_default(),
+            7 as rhai::INT,
+            "we should be getting 7"
+        );
+
+        // test init seconds and nanos
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_seconds(7, 123456789); td.subsec_nanos"#).unwrap_or_default(),
+            123456789 as rhai::INT,
+            "we should be getting 123456789"
+        );
+
+        // test init days
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_days(30); td.seconds"#).unwrap_or_default(),
+            30*86400 as rhai::INT,
+            "we should be getting a month worth of seconds"
+        );
+
+        // test init weeks
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_weeks(4); td.seconds"#).unwrap_or_default(),
+            28*86400 as rhai::INT,
+            "we should be getting 4 weeks worth of seconds"
+        );
+
+        // test init hours
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_hours(2); td.seconds"#).unwrap_or_default(),
+            7200 as rhai::INT,
+            "we should be getting 7200"
+        );
+
+        // test init minutes
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_minutes(30); td.seconds"#).unwrap_or_default(),
+            1800 as rhai::INT,
+            "we should be getting 1800"
+        );
+
+        // test init milliseconds
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_millis(2000); td.seconds"#).unwrap_or_default(),
+            2 as rhai::INT,
+            "we should be getting 2"
+        );
+
+        // test init microseconds
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_micros(2000000); td.seconds"#).unwrap_or_default(),
+            2 as rhai::INT,
+            "we should be getting 2"
+        );
+
+        // test init nanoseconds
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_nanos(2000000000); td.seconds"#).unwrap_or_default(),
+            2 as rhai::INT,
+            "we should be getting 2"
+        );
+
+        // test abs
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_weeks(-4); td.abs(); td.seconds"#).unwrap_or_default(),
+            28*86400 as rhai::INT,
+            "we should be getting 4 weeks worth of seconds"
+        );
+
+        // test add
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_weeks(4); let td2 = timedelta_hours(8); td.add(td2); td.seconds"#).unwrap_or_default(),
+            28*86400 + 8*3600 as rhai::INT,
+            "we should be getting 4 weeks and 8h worth of seconds"
+        );
+
+        // test sub
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_weeks(4); let td2 = timedelta_hours(8); td.sub(td2); td.seconds"#).unwrap_or_default(),
+            28*86400 - 8*3600 as rhai::INT,
+            "we should be getting 3 weeks, 6 days and 16h worth of seconds"
+        );
+
+        // test minutes
+         assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_seconds(60); td.minutes"#).unwrap_or_default(),
+            1 as rhai::INT,
+            "we should be getting 1"
+        );
+
+        // test hours
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_seconds(3600); td.hours"#).unwrap_or_default(),
+            1 as rhai::INT,
+            "we should be getting 1"
+        );
+
+        // test days
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_seconds(86400); td.days"#).unwrap_or_default(),
+            1 as rhai::INT,
+            "we should be getting 1"
+        );
+
+        // test weeks
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_days(14); td.weeks"#).unwrap_or_default(),
+            2 as rhai::INT,
+            "we should be getting 2"
+        );
+
+        // test milliseconds
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_seconds(7); td.milliseconds"#).unwrap_or_default(),
+            7000 as rhai::INT,
+            "we should be getting 7000"
+        );
+
+        // test microseconds
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_seconds(7); td.microseconds"#).unwrap_or_default(),
+            7000000 as rhai::INT,
+            "we should be getting 7000000"
+        );
+
+        // test nanoseconds
+        assert_eq!(
+            engine.eval::<rhai::INT>(r#"let td = timedelta_seconds(7); td.nanoseconds"#).unwrap_or_default(),
+            7000000000 as rhai::INT,
+            "we should be getting 7000000000"
+        );
 
     }
 
