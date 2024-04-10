@@ -349,9 +349,17 @@ Putting it all together:
 
 ```rhai
 let token_created = datetime_utc(); // now in UTC
-token_created.add_timedelta(timedelta_weeks(4)); // + 4 weeks
+token_created.add_timedelta(timedelta_weeks(4)); // +4 weeks
 
 let token_expires_timestamp = token_created.format("%Y-%m-%d %H:%M:%S");
+
+// or instead of adding a timedelta we could use the internals of DateTime itself
+
+let token_created = datetime_utc(); // now in UTC
+token_created.add_months(1); // +1 month
+
+let token_expires_timestamp = token_created.format("%Y-%m-%d %H:%M:%S");
+
 ```
 
 ## License
