@@ -40,7 +40,7 @@ package.register_into_engine(&mut engine);
 
 The package exposes two wrapper types [`DateTimeFixed`](#datetime) (wrapping `chrono::DateTime<FixedOffset>`) and [`Timedelta`](#timedelta) (wrapping `chrono::TimeDelta`).
 
-Each of the two wrapper types can be initialized in a variety of ways using disctinct [contructor functions](#constructors).
+Each of the two wrapper types can be initialized in a variety of ways using distinct [constructor functions](#constructors).
 
 Once initialized, the user can call [methods](#methods) and [get](#getters) / [set](#setters) properties on the wrapper.
 
@@ -340,7 +340,7 @@ Creating a `Timedelta` instance and adding to it.
 ```rhai
 let td = timedelta_days(9);
 td.plus(timedelta_hours(8));
-td.plus(timedelta_secodns(7));
+td.plus(timedelta_seconds(7));
 
 let seconds = td.seconds;           // 9 * 86400 + 8 * 3600 + 7
 ```
