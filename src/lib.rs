@@ -24,12 +24,18 @@ mod tests {
     use crate::datetime::datetime_module::DateTimeFixed;
     use crate::timedelta::timedelta_module::Timedelta;
 
-    #[test]
-    fn it_works() {
+    fn get_engine() -> Engine {
         let mut engine = Engine::new();
 
         let package = ChronoPackage::new();
         package.register_into_engine(&mut engine);
+
+        engine
+    }
+
+    #[test]
+    fn it_works() {
+        let engine = get_engine();
 
         let timestamp_unix: u64 = 618658211;
         let timestamp_unix_millis: u64 = 618658211123;
@@ -696,6 +702,14 @@ mod tests {
 
     #[test]
     fn it_craps() {
-        assert_ne!(0, 1);
+        let engine = get_engine();
+
+        let bad_timestamp_rfc2822 = "Wed, Aug 9 1989 09:30:11";
+
+        // test init from rfc2822
+        assert!(
+            engine.eval::<String>(&format!(r#"datetime_rfc2822("{}")"#, bad_timestamp_rfc2822)).is_err(),
+            "we should be getting parse error"
+        );
     }
 }
