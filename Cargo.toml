@@ -22,7 +22,7 @@ sync = ["rhai/sync"]
 
 [dependencies]
 rhai = { version = "^1.15" }
-chrono = { version = "^0.4", features = ["serde", "unstable-locales"] }
+chrono = { version = "^0.4.37", features = ["serde", "unstable-locales"] }
 chrono-tz = { version = "^0.9" }
 
 [badges]
