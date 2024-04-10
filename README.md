@@ -38,17 +38,19 @@ package.register_into_engine(&mut engine);
 
 ### Behavior
 
-The package exposes two wrapper types `DateTimeFixed` (wrapping `chrono::DateTime<FixedOffset>`) and `Timedelta` (wrapping `chrono::TimeDelta`).
+The package exposes two wrapper types [`DateTimeFixed`](#datetime) (wrapping `chrono::DateTime<FixedOffset>`) and [`Timedelta`](#timedelta) (wrapping `chrono::TimeDelta`).
 
-Each of the two wrapper types can be initialized in a variety of ways using disctinct contructor functions.
+Each of the two wrapper types can be initialized in a variety of ways using disctinct [contructor functions](#constructors).
 
-Once initialized, the user can call methods and get / set properties on the wrapper.
+Once initialized, the user can call [methods](#methods) and [get](#getters) / [set](#setters) properties on the wrapper.
 
 Certain methods yield output values, either a number, string or boolean.
 
 Many of the methods and properties have aliases or variants for convenience.
 
 All methods and properties follow (but with slight nuance) the way you'd normally use `chrono::DateTime` and `chrono::TimeDelta`.
+
+Check the [Examples](#examples) section for more information on practical uses.
 
 ## API
 
@@ -308,7 +310,49 @@ Setters don't make much sense. Nor do they exist in the original `chrono::TimeDe
 
 ## Examples
 
-TODO
+Creating a `DateTimeFixed` instance and playing around with it.
+
+```rhai
+let dt = datetime_rfc3339("1989-08-09T09:30:11+00:00"); 
+
+let timestamp = dt.timestamp();     // 618658211
+let rfc2822_str = dt.to_rfc2822();  // Wed, 9 Aug 1989 09:30:11 +0000
+
+let dt_mysql = datetime_parse("1989-08-09 09:30:11", "%Y-%m-%d %H:%M:%S");
+
+let diff = dt.diff(dt_mysql);       // Timedelta
+
+let seconds_diff = diff.seconds;    // 0
+
+dt.timezone("America/Edmonton"); 
+
+let rfc2822_str2 = dt.to_rfc2822(); // Wed, 9 Aug 1989 03:30:11 -0600
+
+let offset = dt.timezone();         // -06:00
+
+dt.time("12:15"); 
+
+let time = dt.time;                 // 12:15:00
+```
+
+Creating a `Timedelta` instance and adding to it.
+
+```rhai
+let td = timedelta_days(9);
+td.plus(timedelta_hours(8));
+td.plus(timedelta_secodns(7));
+
+let seconds = td.seconds;           // 9 * 86400 + 8 * 3600 + 7
+```
+
+Putting it all together:
+
+```rhai
+let token_created = datetime_utc(); // now in UTC
+token_created.add_timedelta(timedelta_weeks(4)); // + 4 weeks
+
+let token_expires_timestamp = token_created.format("%Y-%m-%d %H:%M:%S");
+```
 
 ## License
 
