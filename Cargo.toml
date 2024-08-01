@@ -21,9 +21,9 @@ default = []
 sync = ["rhai/sync"]
 
 [dependencies]
-rhai = { version = "^1.15" }
-chrono = { version = "^0.4.37", features = ["serde", "unstable-locales"] }
-chrono-tz = { version = "^0.9" }
+rhai = { version = "1" }
+chrono = { version = "0.4", features = ["serde", "unstable-locales"] }
+chrono-tz = { version = "0" }
 
 [badges]
 maintenance = { status = "actively-developed" }
