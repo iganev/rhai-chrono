@@ -24,6 +24,7 @@ rhai-chrono = { version = "^0" }
 
 Include package:
 ```rust
+use rhai::packages::Package;
 use rhai::Engine;
 use rhai_chrono::ChronoPackage;
 ```
